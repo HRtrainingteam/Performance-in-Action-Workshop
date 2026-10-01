@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Performance in Action Workshop – Pre-Evaluation</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;800&family=Public+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #14283A;
+    --ink-soft: #4A5D6C;
+    --paper: #F4F6F8;
+    --card: #FFFFFF;
+    --line: #C9D2DA;
+    --accent: #E0A100;
+    --accent-soft: #FFF4D1;
+    --error: #B3261E;
+    --head: "Bricolage Grotesque", "Segoe UI", Arial, sans-serif;
+    --body: "Public Sans", "Segoe UI", Arial, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0; background: var(--paper); color: var(--ink);
+    font-family: var(--body); font-size: 17px; line-height: 1.55;
+    min-height: 100vh;
+  }
+  main { max-width: 720px; margin: 0 auto; padding: 40px 20px 72px; }
+  h1 {
+    font-family: var(--head); font-weight: 800; letter-spacing: -0.02em;
+    font-size: clamp(2.2rem, 7vw, 3.6rem); line-height: 1.02; margin: 0 0 12px;
+  }
+  .sub { color: var(--ink-soft); margin: 0 0 32px; max-width: 52ch; }
+
+  /* progress gauge */
+  .gauge { display: flex; gap: 4px; margin: 0 0 28px; }
+  .gauge span { flex: 1; height: 8px; background: var(--line); border-radius: 2px; transition: background .2s; }
+  .gauge span.done { background: var(--ink); }
+  .gauge span.now { background: var(--accent); }
+
+  .panel { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 28px; }
+  .field { margin-bottom: 20px; }
+  label.lbl { display: block; font-weight: 600; margin-bottom: 6px; }
+  input[type=text] {
+    width: 100%; font: inherit; padding: 12px 14px; border: 1.5px solid var(--line);
+    border-radius: 8px; background: #fff; color: var(--ink);
+  }
+  input[type=text]:focus { outline: 3px solid var(--accent); outline-offset: 1px; border-color: var(--ink); }
+  .err { color: var(--error); font-size: .95rem; margin: 6px 0 0; min-height: 1.2em; }
+
+  button {
+    font: inherit; font-weight: 600; cursor: pointer; border-radius: 8px;
+    padding: 12px 22px; border: 1.5px solid var(--ink);
+  }
+  button.primary { background: var(--ink); color: #fff; }
+  button.primary:hover:not(:disabled) { background: #0C1A27; }
+  button.ghost { background: transparent; color: var(--ink); }
+  button:disabled { opacity: .4; cursor: not-allowed; }
+  button:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+
+  .qmeta { color: var(--ink-soft); font-size: .95rem; margin: 0 0 8px; }
+  .qtext { font-family: var(--head); font-weight: 600; font-size: 1.4rem; line-height: 1.3; margin: 0 0 22px; }
+  .opts { display: grid; gap: 10px; border: 0; padding: 0; margin: 0; }
+  .opt { position: relative; display: block; cursor: pointer; }
+  .opt input { position: absolute; opacity: 0; inset: 0; cursor: pointer; }
+  .opt .box {
+    display: flex; gap: 14px; align-items: flex-start; padding: 14px 16px;
+    border: 1.5px solid var(--line); border-radius: 8px; background: #fff;
+    transition: border-color .12s, background .12s;
+  }
+  .opt .ltr {
+    flex: none; width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center;
+    font-weight: 600; font-size: .9rem; border: 1.5px solid var(--line); color: var(--ink-soft);
+  }
+  .opt:hover .box { border-color: var(--ink-soft); }
+  .opt input:checked + .box { border-color: var(--ink); background: var(--accent-soft); }
+  .opt input:checked + .box .ltr { background: var(--ink); border-color: var(--ink); color: #fff; }
+  .opt input:focus-visible + .box { outline: 3px solid var(--accent); outline-offset: 2px; }
+
+  .nav { display: flex; justify-content: space-between; gap: 12px; margin-top: 26px; }
+  .hidden { display: none !important; }
+
+  .score { font-family: var(--head); font-weight: 800; font-size: 4rem; line-height: 1; margin: 18px 0 6px; }
+  .note { color: var(--ink-soft); }
+  .banner { margin-top: 16px; padding: 12px 14px; border-radius: 8px; background: #FDECEA; color: var(--error); }
+  @media (max-width: 480px) { .panel { padding: 20px; } .qtext { font-size: 1.2rem; } }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; scroll-behavior: auto !important; } }
+</style>
+</head>
+<body>
+<main>
+  <h1>Performance in Action Workshop</h1>
+  <p class="sub">Pre-evaluation. Answer all 16 questions. Your responses are saved when you submit.</p>
+
+  <!-- Step 1: details -->
+  <section id="start" class="panel">
+    <div class="field">
+      <label class="lbl" for="name">Name</label>
+      <input type="text" id="name" autocomplete="name" placeholder="Your full name">
+    </div>
+    <div class="field">
+      <label class="lbl" for="code">Employee code</label>
+      <input type="text" id="code" autocomplete="off" placeholder="e.g. 12345">
+    </div>
+    <p class="err" id="startErr" role="alert"></p>
+    <button class="primary" id="startBtn">Start evaluation</button>
+  </section>
+
+  <!-- Step 2: questions -->
+  <section id="quiz" class="hidden">
+    <div class="gauge" id="gauge" aria-hidden="true"></div>
+    <div class="panel">
+      <p class="qmeta" id="qmeta" aria-live="polite"></p>
+      <h2 class="qtext" id="qtext"></h2>
+      <fieldset class="opts" id="opts" aria-labelledby="qtext"></fieldset>
+      <div class="nav">
+        <button class="ghost" id="prevBtn">Previous</button>
+        <button class="primary" id="nextBtn" disabled>Next</button>
+      </div>
+      <div class="banner hidden" id="submitErr" role="alert"></div>
+    </div>
+  </section>
+
+  <!-- Step 3: done -->
+  <section id="done" class="panel hidden">
+    <h2 class="qtext" id="thanks"></h2>
+    <p class="note">Your responses have been recorded.</p>
+    <div class="score" id="score"></div>
+    <p class="note">Your pre-evaluation score. Correct answers will be discussed in the workshop.</p>
+  </section>
+</main>
+
+<script>
+/* ============ SETTINGS ============ */
+// Paste your Google Apps Script Web App URL here (see setup steps).
+const SCRIPT_URL = "PASTE_YOUR_WEB_APP_URL_HERE";
+/* ================================== */
+
+const QUESTIONS = [
+ {q:"What is the primary objective of Employee Performance Management?",o:["To identify employees who are underperforming","To monitor attendance and punctuality","To align individual performance with organizational goals and support continuous improvement","To determine salary increases"],a:2},
+ {q:"Which of the following is most important when setting employee KRAs and KPIs?",o:["They should be general and flexible","They should be measurable, relevant, and aligned with organizational objectives","They should focus on daily activities","They should be the same for all employees"],a:1},
+ {q:"Why is regular feedback important in Performance Management?",o:["It helps employees understand expectations, recognize strengths, and identify areas for improvement","It is required when an employee makes a mistake","It replaces the need for performance evaluation","It is primarily used to justify ratings"],a:0},
+ {q:"Which approach reflects effective performance evaluation?",o:["Evaluating employees based on personal impressions","Considering the most recent performance","Evaluating performance using defined KRAs, KPIs, evidence, and observed outcomes","Giving all employees similar ratings to avoid conflict"],a:2},
+ {q:"What should a manager do if an employee is not meeting an agreed KPI?",o:["Immediately assign a low rating","Ignore the issue until the annual review","Discuss the gap, understand the reasons, provide feedback/support, and agree on an improvement plan","Compare the employee with another team member"],a:2},
+ {q:"Which of the following best demonstrates a performance-oriented culture?",o:["Focusing on task completion","Encouraging accountability, regular feedback, learning, and achievement of measurable outcomes","Conducting performance reviews once a year","Giving ratings based on seniority"],a:1},
+ {q:"What is the role of a manager in the Performance Management process?",o:["To assign ratings","To monitor, guide, coach, provide feedback, and support employees in achieving agreed objectives","To identify mistakes and report them to HR","To ensure employees complete their task sheets"],a:1},
+ {q:"Which of the following is an example of a measurable performance outcome?",o:["Handles customers well","Works sincerely","Achieves 95% customer satisfaction against the defined target","Has a positive attitude"],a:2},
+ {q:"Why should performance ratings be supported by evidence?",o:["To make the process longer","To ensure greater objectivity, consistency, and fairness in evaluation","To reduce the manager's responsibility","To avoid giving feedback"],a:1},
+ {q:"Which of the following should NOT be the primary basis for an employee's performance rating?",o:["Achievement against agreed KPIs","Quality and timeliness of outcomes","Relevant behavioural and competency factors","Personal preference or bias of the evaluator"],a:3},
+ {q:"How can employees contribute effectively to Performance Management?",o:["By waiting for the manager's feedback","By understanding their KRAs/KPIs, tracking their progress, seeking feedback, and taking ownership of their development","By focusing on activities assigned to them","By discussing ratings at the end of the appraisal cycle"],a:1},
+ {q:"What is the most effective purpose of a performance review discussion?",o:["To communicate the final rating","To discuss achievements, gaps, feedback, development needs, and future expectations","To compare employees with each other","To identify reasons for salary revision"],a:1},
+ {q:"An employee has completed all assigned activities but has not achieved the expected business outcomes. How should the performance be assessed?",o:["Rate the employee highly because all tasks were completed","Assess the actual outcomes against the agreed KRAs and KPIs","Give an average rating automatically","Ignore the outcome because the activities were completed"],a:1,s:true},
+ {q:"During a review discussion, an employee disagrees with the manager's assessment. What should the manager do?",o:["End the discussion immediately","Change the rating to avoid disagreement","Discuss the evidence, listen to the employee's perspective, and clarify expectations and performance gaps","Ask HR to decide the rating"],a:2,s:true},
+ {q:"An employee consistently performs well against assigned KPIs and also demonstrates process improvement initiatives. What should the manager consider during the performance review?",o:["The assigned KPI achievement","The additional initiative","Both measurable performance outcomes and meaningful contributions beyond routine responsibilities","Neither, as process improvement is not part of performance"],a:2,s:true},
+ {q:"Which statement best reflects the relationship between Performance Management and Employee Development?",o:["Performance Management is about ratings","Performance Management should help identify development needs and create opportunities for improvement and growth","Employee development is completely separate from performance","Development is required for low performers"],a:1,s:true}
+];
+const L = ["A","B","C","D"];
+const $ = id => document.getElementById(id);
+const answers = new Array(QUESTIONS.length).fill(null);
+let cur = 0, person = {}, startedAt = 0, submitting = false;
+
+// gauge
+QUESTIONS.forEach(() => $("gauge").appendChild(document.createElement("span")));
+
+$("startBtn").onclick = () => {
+  const name = $("name").value.trim(), code = $("code").value.trim();
+  if (!name || !code) { $("startErr").textContent = "Enter both your name and employee code to continue."; return; }
+  person = { name, code };
+  startedAt = Date.now();
+  $("start").classList.add("hidden");
+  $("quiz").classList.remove("hidden");
+  render();
+};
+[$("name"), $("code")].forEach(el => el.addEventListener("keydown", e => { if (e.key === "Enter") $("startBtn").click(); }));
+
+function render() {
+  const item = QUESTIONS[cur];
+  $("qmeta").textContent = "Question " + (cur + 1) + " of " + QUESTIONS.length + (item.s ? " · Scenario" : "");
+  $("qtext").textContent = item.q;
+  const box = $("opts"); box.innerHTML = "";
+  item.o.forEach((text, i) => {
+    const lab = document.createElement("label"); lab.className = "opt";
+    const inp = document.createElement("input");
+    inp.type = "radio"; inp.name = "q"; inp.value = i; inp.checked = answers[cur] === i;
+    inp.onchange = () => { answers[cur] = i; $("nextBtn").disabled = false; paintGauge(); };
+    const b = document.createElement("div"); b.className = "box";
+    const l = document.createElement("span"); l.className = "ltr"; l.textContent = L[i];
+    const t = document.createElement("span"); t.textContent = text;
+    b.append(l, t); lab.append(inp, b); box.appendChild(lab);
+  });
+  $("prevBtn").disabled = cur === 0;
+  $("nextBtn").disabled = answers[cur] === null;
+  $("nextBtn").textContent = cur === QUESTIONS.length - 1 ? "Submit answers" : "Next";
+  $("submitErr").classList.add("hidden");
+  paintGauge();
+}
+function paintGauge() {
+  [...$("gauge").children].forEach((s, i) => {
+    s.className = i === cur ? "now" : (answers[i] !== null ? "done" : "");
+  });
+}
+$("prevBtn").onclick = () => { if (cur > 0) { cur--; render(); } };
+$("nextBtn").onclick = () => {
+  if (cur < QUESTIONS.length - 1) { cur++; render(); window.scrollTo({top: 0}); }
+  else submit();
+};
+
+async function submit() {
+  if (submitting) return;
+  const err = $("submitErr");
+  if (!SCRIPT_URL || SCRIPT_URL.startsWith("PASTE")) {
+    err.textContent = "The form is not connected to Google Sheets yet. Add the Web App URL in the SCRIPT_URL setting.";
+    err.classList.remove("hidden"); return;
+  }
+  submitting = true; $("nextBtn").disabled = true; $("nextBtn").textContent = "Submitting…"; err.classList.add("hidden");
+  const score = answers.reduce((n, a, i) => n + (a === QUESTIONS[i].a ? 1 : 0), 0);
+  const payload = {
+    name: person.name, employeeCode: person.code, score, total: QUESTIONS.length,
+    timeTakenSec: Math.round((Date.now() - startedAt) / 1000),
+    answers: answers.map(a => L[a])
+  };
+  try {
+    await fetch(SCRIPT_URL, { method: "POST", mode: "no-cors", headers: {"Content-Type": "text/plain;charset=utf-8"}, body: JSON.stringify(payload) });
+    $("quiz").classList.add("hidden"); $("done").classList.remove("hidden");
+    $("thanks").textContent = "Thank you, " + person.name + ".";
+    $("score").textContent = score + " / " + QUESTIONS.length;
+    window.scrollTo({top: 0});
+  } catch (e) {
+    err.textContent = "Your answers could not be sent. Check your internet connection and select Submit answers again.";
+    err.classList.remove("hidden");
+    $("nextBtn").disabled = false; $("nextBtn").textContent = "Submit answers";
+  }
+  submitting = false;
+}
+</script>
+</body>
+</html>
